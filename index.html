@@ -1361,13 +1361,13 @@ function buildShareText() {
 document.getElementById('shareTwitter').addEventListener('click', () => {
   const text = encodeURIComponent(buildShareText());
   // ── ASSET HOOK: Replace '#' with your game URL when deployed ──
-  const url  = encodeURIComponent('#');
+  const url = encodeURIComponent('https://shield-me-game.vercel.app');
   window.open(`https://twitter.com/intent/tweet?text=${text}&url=${url}`, '_blank');
 });
 
 document.getElementById('shareFacebook').addEventListener('click', () => {
   // ── ASSET HOOK: Replace '#' with your game URL when deployed ──
-  const url = encodeURIComponent('#');
+  const url = encodeURIComponent('https://shield-me-game.vercel.app');
   window.open(`https://www.facebook.com/sharer/sharer.php?u=${url}&quote=${encodeURIComponent(buildShareText())}`, '_blank');
 });
 
