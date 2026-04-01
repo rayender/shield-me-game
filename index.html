@@ -15,7 +15,7 @@
     --red: #ff3b5c;
     --orange: #ff8c42;
     --dark: #0a0c10;
-    --panel: rgba(10, 12, 16, 0.92);
+    --panel: rgba(10, 12, 16, 0.60);
     --glass: rgba(255,255,255,0.04);
     --border: rgba(0, 245, 255, 0.18);
   }
@@ -658,8 +658,8 @@
           <button class="share-btn facebook" id="shareFacebook">
             <span class="share-icon">f</span> Facebook
           </button>
-          <button class="share-btn copy" id="shareCopy">
-            <span class="share-icon">⧉</span> Copy
+          <button class="share-btn copy" id="shareInvite">
+            <span class="share-icon">👥</span> Invite Friend
           </button>
         </div>
       </div>
@@ -683,11 +683,13 @@
             <th>#</th>
             <th>Player</th>
             <th>Time</th>
+            <th>Lvl</th>
+            <th>🛡</th>
             <th>Score</th>
           </tr>
         </thead>
         <tbody id="lbBody">
-          <tr><td colspan="4" class="lb-loading">LOADING…</td></tr>
+          <tr><td colspan="4" class="lb-loading" colspan="6">LOADING…</td></tr>
         </tbody>
       </table>
       <button class="lb-trigger-btn" id="lbRefresh">↻ REFRESH</button>
@@ -771,9 +773,9 @@ const SHIELD_DURATION = 3000; // ms
 let road = {};
 
 function buildRoadLayout() {
-  const rl = W * 0.05;   // road left edge
-  const rr = W * 0.95;   // road right edge
-  const rw = rr - rl;
+  const rl = W * 0.18;   // road left edge  — wider sidewalk (was 0.05)
+  const rr = W * 0.82;   // road right edge — wider sidewalk (was 0.95)
+  const rw = rr - rl;    // road = 64% of screen width
 
   // 4 lanes of equal width
   const lw = rw / 4;
@@ -791,9 +793,13 @@ function buildRoadLayout() {
   // Two pedestrian crossings at 35 % and 65 % of height
   const cross1Y = H * 0.35;
   const cross2Y = H * 0.65;
-  const crossH  = 70 * scale; // height of the crossing band (wider for pedestrians)
+  const crossH  = 70 * scale;
 
-  road = { rl, rr, rw, lw, laneCX, cross1Y, cross2Y, crossH };
+  // Sidewalk width for reference in drawing
+  const swL = rl;           // left sidewalk width
+  const swR = W - rr;       // right sidewalk width
+
+  road = { rl, rr, rw, lw, laneCX, cross1Y, cross2Y, crossH, swL, swR };
 }
 
 buildRoadLayout();
@@ -801,14 +807,81 @@ buildRoadLayout();
 function drawRoad() {
   const { rl, rr, rw, lw, laneCX, cross1Y, cross2Y, crossH } = road;
 
-  // ── Background (asphalt) ──
+  // ── Background ──
   ctx.fillStyle = '#16181f';
   ctx.fillRect(0, 0, W, H);
 
-  // Sidewalk strips (left & right of road)
-  ctx.fillStyle = '#2a2d35';
-  ctx.fillRect(0,  0, rl, H);
+  // ── Left sidewalk ──
+  // Base pavement
+  const swGradL = ctx.createLinearGradient(0, 0, rl, 0);
+  swGradL.addColorStop(0,   '#1e2028');
+  swGradL.addColorStop(0.6, '#2c2f3a');
+  swGradL.addColorStop(1,   '#323642');
+  ctx.fillStyle = swGradL;
+  ctx.fillRect(0, 0, rl, H);
+
+  // Pavement tile lines (horizontal)
+  ctx.strokeStyle = 'rgba(255,255,255,0.06)';
+  ctx.lineWidth   = 1 * scale;
+  for (let ty = 0; ty < H; ty += 28 * scale) {
+    ctx.beginPath(); ctx.moveTo(0, ty); ctx.lineTo(rl, ty); ctx.stroke();
+  }
+  // Pavement tile lines (vertical)
+  for (let tx = 14 * scale; tx < rl; tx += 14 * scale) {
+    ctx.beginPath(); ctx.moveTo(tx, 0); ctx.lineTo(tx, H); ctx.stroke();
+  }
+
+  // Kerb (right edge of left sidewalk — bright stripe)
+  const kerbW = 4 * scale;
+  ctx.fillStyle = '#3a3e4e';
+  ctx.fillRect(rl - kerbW, 0, kerbW, H);
+  ctx.strokeStyle = 'rgba(255,255,255,0.18)';
+  ctx.lineWidth   = 1.5 * scale;
+  ctx.beginPath(); ctx.moveTo(rl - kerbW, 0); ctx.lineTo(rl - kerbW, H); ctx.stroke();
+
+  // ── Right sidewalk ──
+  const swGradR = ctx.createLinearGradient(rr, 0, W, 0);
+  swGradR.addColorStop(0,   '#32364a');
+  swGradR.addColorStop(0.4, '#2c2f3a');
+  swGradR.addColorStop(1,   '#1e2028');
+  ctx.fillStyle = swGradR;
   ctx.fillRect(rr, 0, W - rr, H);
+
+  // Pavement tile lines (horizontal)
+  ctx.strokeStyle = 'rgba(255,255,255,0.06)';
+  ctx.lineWidth   = 1 * scale;
+  for (let ty = 0; ty < H; ty += 28 * scale) {
+    ctx.beginPath(); ctx.moveTo(rr, ty); ctx.lineTo(W, ty); ctx.stroke();
+  }
+  for (let tx = rr + 14 * scale; tx < W; tx += 14 * scale) {
+    ctx.beginPath(); ctx.moveTo(tx, 0); ctx.lineTo(tx, H); ctx.stroke();
+  }
+
+  // Kerb (left edge of right sidewalk)
+  ctx.fillStyle = '#3a3e4e';
+  ctx.fillRect(rr, 0, kerbW, H);
+  ctx.strokeStyle = 'rgba(255,255,255,0.18)';
+  ctx.lineWidth   = 1.5 * scale;
+  ctx.beginPath(); ctx.moveTo(rr + kerbW, 0); ctx.lineTo(rr + kerbW, H); ctx.stroke();
+
+  // ── "SIDEWALK" labels ──
+  ctx.save();
+  ctx.font      = `bold ${8 * scale}px 'Orbitron', sans-serif`;
+  ctx.fillStyle = 'rgba(255,255,255,0.12)';
+  ctx.textAlign = 'center';
+  // Left label — rotated
+  ctx.save();
+  ctx.translate(rl * 0.5, H * 0.5);
+  ctx.rotate(-Math.PI / 2);
+  ctx.fillText('SIDEWALK', 0, 0);
+  ctx.restore();
+  // Right label — rotated
+  ctx.save();
+  ctx.translate(rr + (W - rr) * 0.5, H * 0.5);
+  ctx.rotate(Math.PI / 2);
+  ctx.fillText('SIDEWALK', 0, 0);
+  ctx.restore();
+  ctx.restore();
 
   // Road surface
   const roadGrad = ctx.createLinearGradient(rl, 0, rr, 0);
@@ -1600,7 +1673,7 @@ let savedPlayerName = localStorage.getItem('shieldme_name') || '';
 // Fetch top 10 scores
 async function fetchLeaderboard() {
   const tbody = document.getElementById('lbBody');
-  tbody.innerHTML = '<tr><td colspan="4" class="lb-loading">LOADING…</td></tr>';
+  tbody.innerHTML = '<tr><td colspan="4" class="lb-loading" colspan="6">LOADING…</td></tr>';
 
   if (!supabaseClient || SUPABASE_URL === 'YOUR_SUPABASE_URL') {
     tbody.innerHTML = '<tr><td colspan="4" class="lb-empty">Supabase not configured yet.</td></tr>';
@@ -1616,7 +1689,7 @@ async function fetchLeaderboard() {
 
     if (error) throw error;
     if (!data || data.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="4" class="lb-empty">No scores yet. Be the first!</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="6" class="lb-empty">No scores yet. Be the first!</td></tr>';
       return;
     }
 
@@ -1630,11 +1703,13 @@ async function fetchLeaderboard() {
         <td class="lb-rank ${rankClass}">${i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : i + 1}</td>
         <td>${escHtml(row.name)}</td>
         <td style="font-size:11px;color:rgba(255,255,255,0.45)">${row.time_survived || '—'}</td>
+        <td style="font-size:11px;color:rgba(255,255,255,0.5);text-align:center">${row.level || '—'}</td>
+        <td style="font-size:11px;color:#a0e0ff;text-align:center">${row.insured ?? '—'}</td>
         <td>${row.score.toLocaleString()}</td>
       </tr>`;
     }).join('');
   } catch(err) {
-    tbody.innerHTML = `<tr><td colspan="4" class="lb-empty">Error: ${escHtml(err.message)}</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="6" class="lb-empty">Error: ${escHtml(err.message)}</td></tr>`;
   }
 }
 
@@ -1649,6 +1724,7 @@ async function submitScore(name, scoreVal, timeVal, levelVal) {
     score:          scoreVal,
     time_survived:  timeVal,
     level:          levelVal,
+    insured:        parseInt(document.getElementById('finalInsures').textContent) || 0,
     created_at:     new Date().toISOString()
   });
   if (error) { console.error('Submit error:', error); return false; }
@@ -1735,19 +1811,44 @@ document.getElementById('shareFacebook').addEventListener('click', () => {
   window.open(`https://www.facebook.com/sharer/sharer.php?u=${url}&quote=${encodeURIComponent(buildShareText())}`, '_blank');
 });
 
-document.getElementById('shareCopy').addEventListener('click', () => {
-  const text = buildShareText();
-  if (navigator.clipboard && navigator.clipboard.writeText) {
-    navigator.clipboard.writeText(text).then(showCopyToast);
+document.getElementById('shareInvite').addEventListener('click', () => {
+  const playerScore = document.getElementById('finalScore').textContent;
+  const playerTime  = document.getElementById('finalTime').textContent;
+  const playerLevel = document.getElementById('finalLevel').textContent;
+  // ── ASSET HOOK: Replace with your real game URL ──
+  const gameUrl     = window.location.href.split('?')[0];
+  const message     = `🛡 Hey! I just scored ${playerScore} pts in Shield Me — survived ${playerTime} at Level ${playerLevel}. Think you can beat me? Play here: ${gameUrl}`;
+
+  // Try native share sheet first (mobile)
+  if (navigator.share) {
+    navigator.share({
+      title: 'Shield Me — Beat My Score!',
+      text:  message,
+      url:   gameUrl
+    }).catch(() => {}); // user cancelled — ignore
   } else {
-    // Fallback for older mobile browsers
-    const ta = document.createElement('textarea');
-    ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
-    document.body.appendChild(ta); ta.select();
-    try { document.execCommand('copy'); showCopyToast(); } catch(e) {}
-    document.body.removeChild(ta);
+    // Desktop fallback: copy invite message to clipboard
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(message).then(showInviteToast);
+    } else {
+      const ta = document.createElement('textarea');
+      ta.value = message; ta.style.position = 'fixed'; ta.style.opacity = '0';
+      document.body.appendChild(ta); ta.select();
+      try { document.execCommand('copy'); showInviteToast(); } catch(e) {}
+      document.body.removeChild(ta);
+    }
   }
 });
+
+function showInviteToast() {
+  const toast = document.getElementById('copyToast');
+  toast.textContent = '👥 INVITE LINK COPIED!';
+  toast.classList.add('show');
+  setTimeout(() => {
+    toast.classList.remove('show');
+    toast.textContent = '✓ COPIED TO CLIPBOARD'; // reset
+  }, 2400);
+}
 
 function showCopyToast() {
   const toast = document.getElementById('copyToast');
