@@ -1357,6 +1357,7 @@ function checkCollisions() {
           currentOverlaps.add(pairKey);
           score += 100;
           insureCount++; // count as a successful insure event for stats
+          haptic([30, 20, 60]); // double-pulse for pass-through
 
           // Show +100 above whichever entity is shielded
           const target = a.shielded ? a : b;
@@ -1573,6 +1574,7 @@ function handleInput(clientX, clientY) {
         e.insure();
         insureCount++;
         score += 10;
+        haptic(40); // short tap feedback on insure
         particles.push(new FloatText(e.x, e.y - e.hh - 10 * scale, 'INSURED! +10', '#00f5ff'));
       } else {
         // Refresh shield
@@ -1623,9 +1625,22 @@ function startGame() {
   });
 }
 
+
+// ── HAPTIC FEEDBACK ──────────────────────────────────────
+// Uses the Vibration API — supported on Android Chrome/Firefox.
+// iOS Safari does not support vibration; fails silently.
+function haptic(pattern) {
+  try {
+    if (navigator.vibrate) navigator.vibrate(pattern);
+  } catch(e) {}
+}
+
 function triggerGameOver() {
   state = 'dead';
   cancelAnimationFrame(rafId);
+
+  // Game over haptic: strong-pause-strong-pause-strong (collision feel)
+  haptic([120, 60, 120, 60, 220]);
 
   const elapsed = performance.now() - startTime;
 
