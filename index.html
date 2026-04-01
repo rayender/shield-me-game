@@ -359,12 +359,205 @@
   }
   .copy-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
+
+  /* ── LEADERBOARD ── */
+  .lb-modal {
+    position: absolute;
+    inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    z-index: 30;
+    padding: 20px;
+    background: rgba(0,0,0,0.6);
+    backdrop-filter: blur(6px);
+  }
+
+  .lb-panel {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 28px 22px 22px;
+    width: 100%;
+    max-width: 340px;
+    box-shadow: 0 0 60px rgba(0,245,255,0.1);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .lb-panel::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: radial-gradient(ellipse at 50% 0%, rgba(0,245,255,0.06) 0%, transparent 65%);
+    pointer-events: none;
+  }
+
+  .lb-title {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 16px;
+    font-weight: 900;
+    letter-spacing: 3px;
+    color: var(--cyan);
+    text-align: center;
+    margin-bottom: 18px;
+    text-shadow: 0 0 14px var(--cyan);
+  }
+
+  .lb-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 16px;
+  }
+
+  .lb-table th {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 8px;
+    letter-spacing: 2px;
+    color: rgba(255,255,255,0.3);
+    text-transform: uppercase;
+    padding: 0 6px 8px;
+    text-align: left;
+    border-bottom: 1px solid rgba(255,255,255,0.07);
+  }
+
+  .lb-table th:last-child { text-align: right; }
+
+  .lb-table td {
+    padding: 9px 6px;
+    font-size: 13px;
+    color: rgba(255,255,255,0.75);
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+    vertical-align: middle;
+  }
+
+  .lb-table td:last-child { text-align: right; font-family: 'Orbitron', sans-serif; font-size: 12px; color: var(--cyan); }
+
+  .lb-rank {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    color: rgba(255,255,255,0.3);
+    width: 24px;
+  }
+
+  .lb-rank.gold   { color: #f5c842; text-shadow: 0 0 8px #f5c842; }
+  .lb-rank.silver { color: #c0c0c0; text-shadow: 0 0 8px #c0c0c0; }
+  .lb-rank.bronze { color: #cd7f32; text-shadow: 0 0 8px #cd7f32; }
+
+  .lb-highlight td { background: rgba(0,245,255,0.06); color: #fff; }
+
+  .lb-empty {
+    text-align: center;
+    color: rgba(255,255,255,0.25);
+    font-size: 12px;
+    padding: 20px 0;
+  }
+
+  .lb-loading {
+    text-align: center;
+    color: var(--cyan);
+    font-size: 12px;
+    padding: 20px 0;
+    font-family: 'Orbitron', sans-serif;
+    letter-spacing: 2px;
+  }
+
+  .lb-close {
+    position: absolute;
+    top: 14px; right: 16px;
+    background: none; border: none;
+    color: rgba(255,255,255,0.35);
+    font-size: 20px;
+    cursor: pointer;
+    line-height: 1;
+    transition: color 0.15s;
+  }
+  .lb-close:hover { color: #fff; }
+
+  /* Name input on game over */
+  .name-input-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 14px;
+    align-items: center;
+  }
+
+  .name-input {
+    flex: 1;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 11px 14px;
+    color: #fff;
+    font-family: 'Exo 2', sans-serif;
+    font-size: 14px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .name-input::placeholder { color: rgba(255,255,255,0.25); }
+  .name-input:focus { border-color: var(--cyan); }
+
+  .submit-score-btn {
+    background: linear-gradient(135deg, #00d4e8, #0077ff);
+    border: none;
+    border-radius: 10px;
+    color: #fff;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    padding: 11px 14px;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: opacity 0.2s, transform 0.12s;
+  }
+  .submit-score-btn:hover { opacity: 0.85; transform: translateY(-1px); }
+  .submit-score-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+
+  .score-submitted {
+    font-size: 11px;
+    color: var(--cyan);
+    letter-spacing: 1px;
+    text-align: center;
+    margin-bottom: 14px;
+    padding: 8px;
+    background: rgba(0,245,255,0.07);
+    border-radius: 8px;
+    display: none;
+  }
+
+  /* Leaderboard button on start screen */
+  .lb-trigger-btn {
+    background: none;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    color: var(--cyan);
+    font-family: 'Orbitron', sans-serif;
+    font-size: 10px;
+    letter-spacing: 2px;
+    padding: 9px 16px;
+    cursor: pointer;
+    width: 100%;
+    margin-top: 10px;
+    transition: background 0.15s;
+  }
+  .lb-trigger-btn:hover { background: rgba(0,245,255,0.07); }
+
+  /* ── PAUSE ── */
+  #pauseOverlay .overlay-panel {
+    text-align: center;
+  }
+  #pauseOverlay .game-subtitle {
+    font-size: 11px;
+    letter-spacing: 2px;
+  }
+
   /* pulse animation for shield */
   @keyframes shieldPulse {
     0%,100% { opacity: 1; }
     50% { opacity: 0.6; }
   }
 </style>
+<!-- Supabase JS SDK -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 </head>
 <body>
 
@@ -417,6 +610,7 @@
       </div>
 
       <button class="btn btn-primary" id="startBtn">▶ START GAME</button>
+      <button class="lb-trigger-btn" id="lbOpenStart">🏆 LEADERBOARD</button>
     </div>
   </div>
 
@@ -447,6 +641,13 @@
         </div>
       </div>
 
+      <!-- Submit Score to Leaderboard -->
+      <div class="name-input-row">
+        <input class="name-input" id="playerNameInput" type="text" maxlength="16" placeholder="Enter your name…" autocomplete="off" />
+        <button class="submit-score-btn" id="submitScoreBtn">SUBMIT</button>
+      </div>
+      <div class="score-submitted" id="scoreSubmitted">✓ Score submitted!</div>
+
       <!-- Share Score -->
       <div class="share-banner">
         <div class="share-label">Share your score</div>
@@ -471,8 +672,41 @@
     </div>
   </div>
 
+  <!-- Leaderboard Modal -->
+  <div class="lb-modal hidden" id="lbModal">
+    <div class="lb-panel">
+      <button class="lb-close" id="lbClose">✕</button>
+      <div class="lb-title">🏆 LEADERBOARD</div>
+      <table class="lb-table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Player</th>
+            <th>Time</th>
+            <th>Score</th>
+          </tr>
+        </thead>
+        <tbody id="lbBody">
+          <tr><td colspan="4" class="lb-loading">LOADING…</td></tr>
+        </tbody>
+      </table>
+      <button class="lb-trigger-btn" id="lbRefresh">↻ REFRESH</button>
+    </div>
+  </div>
+
   <!-- Copy Toast -->
   <div class="copy-toast" id="copyToast">✓ COPIED TO CLIPBOARD</div>
+
+  <!-- Pause Overlay -->
+  <div class="overlay hidden" id="pauseOverlay">
+    <div class="overlay-panel" style="max-width:300px;">
+      <div class="game-title" style="font-size:32px;margin-bottom:6px;">PAUSED</div>
+      <div class="game-subtitle" style="margin-bottom:24px;">Game paused · Tab back to resume</div>
+      <div style="font-size:36px;margin-bottom:20px;">⏸</div>
+      <button class="btn btn-primary" id="resumeBtn" style="margin-bottom:10px;">▶ RESUME</button>
+      <button class="btn btn-secondary" id="pauseMenuBtn">⌂ Menu</button>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -1197,7 +1431,7 @@ function spawnEntities(dt) {
 let rafId = null;
 
 function gameLoop(timestamp) {
-  if (state !== 'playing') return;
+  if (state !== 'playing') return; // also stops when state = 'paused' or 'dead'
 
   deltaTime    = Math.min(timestamp - lastTimestamp, 100); // cap at 100ms
   lastTimestamp = timestamp;
@@ -1296,10 +1530,12 @@ function startGame() {
   level         = 1;
   carSpawnTimer = 0;
   pedSpawnTimer = 0;
+  pausedAt      = 0;
   entities      = [];
   particles     = [];
   activePassthroughs.clear();
   buildRoadLayout();
+  document.getElementById('pauseOverlay').classList.add('hidden');
   deathReason = '';
   startTime   = performance.now();
   lastTimestamp = startTime;
@@ -1339,7 +1575,135 @@ function triggerGameOver() {
 }
 
 document.getElementById('startBtn').addEventListener('click', startGame);
-document.getElementById('restartBtn').addEventListener('click', startGame);
+document.getElementById('restartBtn').addEventListener('click', () => {
+  // Reset submit state on restart
+  document.getElementById('scoreSubmitted').style.display = 'none';
+  document.getElementById('submitScoreBtn').disabled = false;
+  document.getElementById('playerNameInput').value = savedPlayerName;
+  startGame();
+});
+
+// ── SUPABASE LEADERBOARD ──────────────────────────────────
+// !! Replace these two values with your own from supabase.com !!
+const SUPABASE_URL    = 'https://msluwlyqpoxbmtgwawge.supabase.co';       // e.g. https://xyzxyz.supabase.co
+const SUPABASE_ANON   = 'sb_publishable_EB1uZ5QEgPHEj6IMH9mz-Q_hRuer0Hu';  // long string starting with eyJ…
+
+let supabaseClient = null;
+try {
+  supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+} catch(e) {
+  console.warn('Supabase not configured yet:', e.message);
+}
+
+let savedPlayerName = localStorage.getItem('shieldme_name') || '';
+
+// Fetch top 10 scores
+async function fetchLeaderboard() {
+  const tbody = document.getElementById('lbBody');
+  tbody.innerHTML = '<tr><td colspan="4" class="lb-loading">LOADING…</td></tr>';
+
+  if (!supabaseClient || SUPABASE_URL === 'YOUR_SUPABASE_URL') {
+    tbody.innerHTML = '<tr><td colspan="4" class="lb-empty">Supabase not configured yet.</td></tr>';
+    return;
+  }
+
+  try {
+    const { data, error } = await supabaseClient
+      .from('leaderboard')
+      .select('name, score, time_survived, level')
+      .order('score', { ascending: false })
+      .limit(10);
+
+    if (error) throw error;
+    if (!data || data.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="4" class="lb-empty">No scores yet. Be the first!</td></tr>';
+      return;
+    }
+
+    const medals = ['gold', 'silver', 'bronze'];
+    const currentScore = parseInt(document.getElementById('finalScore').textContent) || -1;
+
+    tbody.innerHTML = data.map((row, i) => {
+      const rankClass  = medals[i] || '';
+      const isMe       = row.score === currentScore && row.name === (savedPlayerName || '');
+      return `<tr class="${isMe ? 'lb-highlight' : ''}">
+        <td class="lb-rank ${rankClass}">${i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : i + 1}</td>
+        <td>${escHtml(row.name)}</td>
+        <td style="font-size:11px;color:rgba(255,255,255,0.45)">${row.time_survived || '—'}</td>
+        <td>${row.score.toLocaleString()}</td>
+      </tr>`;
+    }).join('');
+  } catch(err) {
+    tbody.innerHTML = `<tr><td colspan="4" class="lb-empty">Error: ${escHtml(err.message)}</td></tr>`;
+  }
+}
+
+// Submit score
+async function submitScore(name, scoreVal, timeVal, levelVal) {
+  if (!supabaseClient || SUPABASE_URL === 'YOUR_SUPABASE_URL') {
+    alert('Supabase is not configured yet. See setup guide.');
+    return false;
+  }
+  const { error } = await supabaseClient.from('leaderboard').insert({
+    name:           name.trim().slice(0, 16) || 'Anonymous',
+    score:          scoreVal,
+    time_survived:  timeVal,
+    level:          levelVal,
+    created_at:     new Date().toISOString()
+  });
+  if (error) { console.error('Submit error:', error); return false; }
+  return true;
+}
+
+function escHtml(str) {
+  return String(str).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+// Submit button
+document.getElementById('submitScoreBtn').addEventListener('click', async () => {
+  const nameInput = document.getElementById('playerNameInput');
+  const name      = nameInput.value.trim() || 'Anonymous';
+  const btn       = document.getElementById('submitScoreBtn');
+  const submitted = document.getElementById('scoreSubmitted');
+
+  btn.disabled    = true;
+  btn.textContent = '…';
+
+  // Save name for next time
+  savedPlayerName = name;
+  localStorage.setItem('shieldme_name', name);
+
+  const ok = await submitScore(
+    name,
+    parseInt(document.getElementById('finalScore').textContent),
+    document.getElementById('finalTime').textContent,
+    parseInt(document.getElementById('finalLevel').textContent)
+  );
+
+  if (ok) {
+    submitted.style.display = 'block';
+    btn.textContent = '✓ DONE';
+  } else {
+    btn.disabled    = false;
+    btn.textContent = 'SUBMIT';
+  }
+});
+
+// Pre-fill name from last session
+document.getElementById('playerNameInput').value = savedPlayerName;
+
+// Open / close leaderboard modal
+function openLeaderboard() {
+  document.getElementById('lbModal').classList.remove('hidden');
+  fetchLeaderboard();
+}
+function closeLeaderboard() {
+  document.getElementById('lbModal').classList.add('hidden');
+}
+
+document.getElementById('lbClose').addEventListener('click', closeLeaderboard);
+document.getElementById('lbRefresh').addEventListener('click', fetchLeaderboard);
+document.getElementById('lbOpenStart').addEventListener('click', openLeaderboard);
 
 // ── Menu button → back to start screen ──
 document.getElementById('menuBtn').addEventListener('click', () => {
@@ -1361,13 +1725,13 @@ function buildShareText() {
 document.getElementById('shareTwitter').addEventListener('click', () => {
   const text = encodeURIComponent(buildShareText());
   // ── ASSET HOOK: Replace '#' with your game URL when deployed ──
-  const url = encodeURIComponent('https://shield-me-game.vercel.app');
+  const url  = encodeURIComponent('https://project-oknus.vercel.app/');
   window.open(`https://twitter.com/intent/tweet?text=${text}&url=${url}`, '_blank');
 });
 
 document.getElementById('shareFacebook').addEventListener('click', () => {
   // ── ASSET HOOK: Replace '#' with your game URL when deployed ──
-  const url = encodeURIComponent('https://shield-me-game.vercel.app');
+  const url = encodeURIComponent('https://project-oknus.vercel.app/');
   window.open(`https://www.facebook.com/sharer/sharer.php?u=${url}&quote=${encodeURIComponent(buildShareText())}`, '_blank');
 });
 
@@ -1390,6 +1754,57 @@ function showCopyToast() {
   toast.classList.add('show');
   setTimeout(() => toast.classList.remove('show'), 2200);
 }
+
+// ── 11. PAUSE SYSTEM ─────────────────────────────────────────
+let pausedAt = 0; // timestamp when paused
+
+function pauseGame() {
+  if (state !== 'playing') return;
+  state    = 'paused';
+  pausedAt = performance.now();
+  cancelAnimationFrame(rafId);
+  document.getElementById('pauseOverlay').classList.remove('hidden');
+}
+
+function resumeGame() {
+  if (state !== 'paused') return;
+  // Shift startTime forward by the paused duration so score timer is accurate
+  const pauseDuration = performance.now() - pausedAt;
+  startTime          += pauseDuration;
+  state               = 'playing';
+  document.getElementById('pauseOverlay').classList.add('hidden');
+  lastTimestamp = performance.now();
+  rafId = requestAnimationFrame(gameLoop);
+}
+
+// Auto-pause when tab is hidden / app minimized
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) pauseGame();
+});
+
+// Also pause on window blur (desktop: switch app or minimize)
+window.addEventListener('blur', () => pauseGame());
+
+// Resume button
+document.getElementById('resumeBtn').addEventListener('click', resumeGame);
+
+// Pause → Menu
+document.getElementById('pauseMenuBtn').addEventListener('click', () => {
+  state = 'idle';
+  cancelAnimationFrame(rafId);
+  entities = [];
+  particles = [];
+  document.getElementById('pauseOverlay').classList.add('hidden');
+  document.getElementById('startOverlay').classList.remove('hidden');
+});
+
+// Keyboard: Escape or P to toggle pause
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' || e.key === 'p' || e.key === 'P') {
+    if (state === 'playing') pauseGame();
+    else if (state === 'paused') resumeGame();
+  }
+});
 
 // Draw idle road on load
 (function idleDraw() {
