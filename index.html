@@ -764,8 +764,8 @@ let particles = [];
 let deathReason = '';
 
 // Base difficulty — bumped up for faster feel
-const BASE_SPEED      = 80;   // px/s at scale 1
-const BASE_INTERVAL   = 1400; // ms between spawns
+const BASE_SPEED      = 60;   // px/s at scale 1
+const BASE_INTERVAL   = 1800; // ms between spawns
 const SHIELD_DURATION = 3000; // ms
 
 // ── 3. STATIC ROAD LAYOUT ────────────────────────────────────
@@ -1458,8 +1458,8 @@ function spawnPedestrian(TypeClass) {
 
 let carSpawnTimer  = 0;
 let pedSpawnTimer  = 0;
-const CAR_INTERVAL = () => Math.max(700,  BASE_INTERVAL / (1 + (level - 1) * 0.02)); // gradually speeds up 2%/level
-const PED_INTERVAL = () => Math.max(700,  BASE_INTERVAL / (1 + (level - 1) * 0.02)); // gradually speeds up 2%/level
+const CAR_INTERVAL = () => Math.max(500,  BASE_INTERVAL / (1 + (level - 1) * 0.02)); // gradually speeds up 2%/level
+const PED_INTERVAL = () => Math.max(400,  BASE_INTERVAL / (1 + (level - 1) * 0.02)); // gradually speeds up 2%/level
 
 function spawnEntities(dt) {
   carSpawnTimer += dt;
