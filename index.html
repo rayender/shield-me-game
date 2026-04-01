@@ -1,0 +1,1419 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Shield Me</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Exo+2:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --cyan: #00f5ff;
+    --cyan-glow: rgba(0, 245, 255, 0.35);
+    --red: #ff3b5c;
+    --orange: #ff8c42;
+    --dark: #0a0c10;
+    --panel: rgba(10, 12, 16, 0.92);
+    --glass: rgba(255,255,255,0.04);
+    --border: rgba(0, 245, 255, 0.18);
+  }
+
+  html, body {
+    width: 100%; height: 100%;
+    overflow: hidden;
+    background: var(--dark);
+    font-family: 'Exo 2', sans-serif;
+    color: #fff;
+    touch-action: none;
+  }
+
+  #gameWrapper {
+    position: relative;
+    width: 100%; height: 100%;
+    display: flex; align-items: center; justify-content: center;
+  }
+
+  canvas {
+    display: block;
+    touch-action: none;
+    cursor: crosshair;
+  }
+
+  /* ── HUD ── */
+  #hud {
+    position: absolute;
+    top: 0; left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    max-width: 420px;
+    padding: 10px 16px 8px;
+    background: linear-gradient(to bottom, rgba(0,0,0,0.75), transparent);
+    pointer-events: none;
+    z-index: 10;
+    gap: 8px;
+  }
+
+  .hud-block {
+    display: flex; flex-direction: column; align-items: center;
+  }
+
+  .hud-label {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 9px;
+    letter-spacing: 2px;
+    color: var(--cyan);
+    opacity: 0.7;
+    text-transform: uppercase;
+  }
+
+  .hud-value {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 18px;
+    font-weight: 900;
+    color: #fff;
+    text-shadow: 0 0 12px var(--cyan);
+    line-height: 1;
+  }
+
+  .hud-divider {
+    width: 1px; height: 30px;
+    background: var(--border);
+  }
+
+  /* ── OVERLAYS ── */
+  .overlay {
+    position: absolute;
+    inset: 0;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    z-index: 20;
+    padding: 24px;
+  }
+
+  .overlay-panel {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 36px 28px;
+    width: 100%;
+    max-width: 340px;
+    text-align: center;
+    box-shadow: 0 0 60px rgba(0,245,255,0.08), inset 0 1px 0 rgba(255,255,255,0.06);
+    backdrop-filter: blur(12px);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .overlay-panel::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse at 50% 0%, rgba(0,245,255,0.07) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .game-title {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 40px;
+    font-weight: 900;
+    letter-spacing: 2px;
+    color: #fff;
+    text-shadow: 0 0 30px var(--cyan), 0 0 60px rgba(0,245,255,0.3);
+    line-height: 1;
+    margin-bottom: 6px;
+  }
+
+  .game-subtitle {
+    font-size: 13px;
+    letter-spacing: 3px;
+    color: var(--cyan);
+    opacity: 0.75;
+    text-transform: uppercase;
+    margin-bottom: 28px;
+  }
+
+  .instructions {
+    font-size: 13px;
+    line-height: 1.7;
+    color: rgba(255,255,255,0.6);
+    margin-bottom: 28px;
+  }
+
+  .instructions strong {
+    color: var(--cyan);
+    font-weight: 600;
+  }
+
+  .legend {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 28px;
+  }
+
+  .legend-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    text-align: left;
+    font-size: 12px;
+    color: rgba(255,255,255,0.55);
+  }
+
+  .legend-icon {
+    width: 22px; height: 22px;
+    border-radius: 4px;
+    flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+  }
+
+  .btn {
+    display: inline-flex;
+    align-items: center; justify-content: center;
+    gap: 8px;
+    width: 100%;
+    padding: 15px 24px;
+    border: none; outline: none;
+    border-radius: 12px;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    cursor: pointer;
+    transition: transform 0.12s, box-shadow 0.12s;
+    text-transform: uppercase;
+  }
+
+  .btn-primary {
+    background: linear-gradient(135deg, #00d4e8 0%, #0077ff 100%);
+    color: #fff;
+    box-shadow: 0 4px 24px rgba(0,180,255,0.45);
+  }
+
+  .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 32px rgba(0,180,255,0.55); }
+  .btn-primary:active { transform: translateY(0); }
+
+  .score-display {
+    margin-bottom: 24px;
+  }
+
+  .score-label {
+    font-size: 11px;
+    letter-spacing: 3px;
+    color: rgba(255,255,255,0.4);
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+
+  .score-big {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 52px;
+    font-weight: 900;
+    color: #fff;
+    text-shadow: 0 0 20px var(--cyan);
+    line-height: 1;
+  }
+
+  .score-breakdown {
+    display: flex;
+    gap: 20px;
+    justify-content: center;
+    margin-top: 10px;
+    flex-wrap: wrap;
+  }
+
+  .score-item {
+    text-align: center;
+  }
+
+  .score-item-val {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--cyan);
+  }
+
+  .score-item-lbl {
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: rgba(255,255,255,0.35);
+    text-transform: uppercase;
+  }
+
+  .death-reason {
+    font-size: 12px;
+    color: var(--red);
+    margin-bottom: 20px;
+    letter-spacing: 1px;
+    padding: 8px 16px;
+    background: rgba(255,59,92,0.1);
+    border-radius: 8px;
+    border: 1px solid rgba(255,59,92,0.2);
+  }
+
+  #startOverlay, #gameOverOverlay { transition: opacity 0.3s; }
+  .hidden { display: none !important; }
+
+
+  .btn-secondary {
+    background: var(--glass);
+    color: rgba(255,255,255,0.75);
+    border: 1px solid var(--border);
+    box-shadow: none;
+  }
+  .btn-secondary:hover { background: rgba(255,255,255,0.08); transform: translateY(-2px); }
+  .btn-secondary:active { transform: translateY(0); }
+
+  .btn-danger {
+    background: linear-gradient(135deg, #ff3b5c 0%, #c0003a 100%);
+    color: #fff;
+    box-shadow: 0 4px 20px rgba(255,59,92,0.35);
+  }
+  .btn-danger:hover { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(255,59,92,0.45); }
+  .btn-danger:active { transform: translateY(0); }
+
+  .btn-row {
+    display: flex;
+    gap: 10px;
+    width: 100%;
+    margin-top: 0;
+  }
+
+  .btn-row .btn { flex: 1; padding: 13px 8px; font-size: 12px; }
+
+  .share-banner {
+    width: 100%;
+    border: 1px dashed rgba(0,245,255,0.25);
+    border-radius: 12px;
+    padding: 14px 16px;
+    margin-bottom: 16px;
+    background: rgba(0,245,255,0.04);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .share-label {
+    font-size: 10px;
+    letter-spacing: 3px;
+    color: rgba(255,255,255,0.35);
+    text-transform: uppercase;
+  }
+
+  .share-buttons {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .share-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 14px;
+    border-radius: 8px;
+    border: 1px solid rgba(255,255,255,0.1);
+    background: rgba(255,255,255,0.06);
+    color: rgba(255,255,255,0.7);
+    font-family: 'Exo 2', sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s, transform 0.12s;
+    white-space: nowrap;
+  }
+
+  .share-btn:hover { background: rgba(255,255,255,0.13); transform: translateY(-1px); }
+  .share-btn:active { transform: translateY(0); }
+  .share-btn .share-icon { font-size: 14px; }
+
+  .share-btn.twitter  { border-color: rgba(29,161,242,0.3);  color: #1da1f2; }
+  .share-btn.facebook { border-color: rgba(66,103,178,0.3);  color: #4267b2; }
+  .share-btn.copy     { border-color: rgba(0,245,255,0.3);   color: var(--cyan); }
+
+  .copy-toast {
+    position: fixed;
+    bottom: 32px;
+    left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: rgba(0,245,255,0.15);
+    border: 1px solid var(--cyan);
+    color: var(--cyan);
+    font-family: 'Orbitron', sans-serif;
+    font-size: 11px;
+    letter-spacing: 2px;
+    padding: 10px 20px;
+    border-radius: 8px;
+    opacity: 0;
+    transition: opacity 0.25s, transform 0.25s;
+    pointer-events: none;
+    z-index: 99;
+    white-space: nowrap;
+  }
+  .copy-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  /* pulse animation for shield */
+  @keyframes shieldPulse {
+    0%,100% { opacity: 1; }
+    50% { opacity: 0.6; }
+  }
+</style>
+</head>
+<body>
+
+<div id="gameWrapper">
+  <canvas id="gameCanvas"></canvas>
+
+  <!-- HUD -->
+  <div id="hud">
+    <div class="hud-block">
+      <div class="hud-label">Score</div>
+      <div class="hud-value" id="hudScore">0</div>
+    </div>
+    <div class="hud-divider"></div>
+    <div class="hud-block">
+      <div class="hud-label">Time</div>
+      <div class="hud-value" id="hudTime">0:00</div>
+    </div>
+    <div class="hud-divider"></div>
+    <div class="hud-block">
+      <div class="hud-label">Level</div>
+      <div class="hud-value" id="hudLevel">1</div>
+    </div>
+  </div>
+
+  <!-- Start Overlay -->
+  <div class="overlay" id="startOverlay">
+    <div class="overlay-panel">
+      <div class="game-title">SHIELD ME</div>
+      <div class="game-subtitle">Insure · Protect · Survive</div>
+
+      <div class="instructions">
+        <strong>Tap entities</strong> to shield them for <strong>3 seconds</strong>.<br>
+        Shielded entities <strong>pass through</strong> collisions for <strong>+100 pts</strong>.<br>
+        One unshielded crash = <strong>Game Over</strong>.
+      </div>
+
+      <div class="legend">
+        <div class="legend-row">
+          <div class="legend-icon" style="background:#e84040;">🚗</div>
+          <span>Cars — move vertically across lanes</span>
+        </div>
+        <div class="legend-row">
+          <div class="legend-icon" style="background:#4a90d9;">●</div>
+          <span>People — walk horizontally</span>
+        </div>
+        <div class="legend-row">
+          <div class="legend-icon" style="background:#ff8c42;">■</div>
+          <span>Pets — fast, small, unpredictable</span>
+        </div>
+      </div>
+
+      <button class="btn btn-primary" id="startBtn">▶ START GAME</button>
+    </div>
+  </div>
+
+  <!-- Game Over Overlay -->
+  <div class="overlay hidden" id="gameOverOverlay">
+    <div class="overlay-panel">
+      <div class="game-title" style="font-size:28px;margin-bottom:4px;">GAME OVER</div>
+      <div class="game-subtitle" style="margin-bottom:16px;">Better luck next time</div>
+
+      <div id="deathReason" class="death-reason">Collision detected!</div>
+
+      <div class="score-display">
+        <div class="score-label">Final Score</div>
+        <div class="score-big" id="finalScore">0</div>
+        <div class="score-breakdown">
+          <div class="score-item">
+            <div class="score-item-val" id="finalTime">0:00</div>
+            <div class="score-item-lbl">Survived</div>
+          </div>
+          <div class="score-item">
+            <div class="score-item-val" id="finalInsures">0</div>
+            <div class="score-item-lbl">Insured</div>
+          </div>
+          <div class="score-item">
+            <div class="score-item-val" id="finalLevel">1</div>
+            <div class="score-item-lbl">Level Reached</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Share Score -->
+      <div class="share-banner">
+        <div class="share-label">Share your score</div>
+        <div class="share-buttons">
+          <button class="share-btn twitter" id="shareTwitter">
+            <span class="share-icon">𝕏</span> Twitter
+          </button>
+          <button class="share-btn facebook" id="shareFacebook">
+            <span class="share-icon">f</span> Facebook
+          </button>
+          <button class="share-btn copy" id="shareCopy">
+            <span class="share-icon">⧉</span> Copy
+          </button>
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="btn-row">
+        <button class="btn btn-secondary" id="menuBtn">⌂ Menu</button>
+        <button class="btn btn-primary" id="restartBtn">↺ Play Again</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Copy Toast -->
+  <div class="copy-toast" id="copyToast">✓ COPIED TO CLIPBOARD</div>
+</div>
+
+<script>
+// ============================================================
+//  SHIELD ME — Main Game Script
+//  Structure:
+//    1. Canvas & resize setup
+//    2. Game state & constants
+//    3. Road / background rendering (static)
+//    4. Entity classes (Car, Person, Pet)
+//    5. Floating text particles
+//    6. Collision detection
+//    7. Game loop
+//    8. Input handling (mouse + touch)
+//    9. UI / overlay management
+// ============================================================
+
+const canvas  = document.getElementById('gameCanvas');
+const ctx     = canvas.getContext('2d');
+
+// ── 1. CANVAS SETUP ─────────────────────────────────────────
+const MAX_W = 420;
+let W, H, scale;
+
+function resizeCanvas() {
+  const ww = window.innerWidth, wh = window.innerHeight;
+  if (ww / wh > MAX_W / 900) {
+    H = wh; W = Math.min(Math.floor(wh * (MAX_W / 900)), MAX_W);
+  } else {
+    W = ww; H = wh;
+  }
+  canvas.width  = W;
+  canvas.height = H;
+  canvas.style.width  = W + 'px';
+  canvas.style.height = H + 'px';
+  scale = W / MAX_W;
+}
+
+resizeCanvas();
+window.addEventListener('resize', () => { resizeCanvas(); buildRoadLayout(); });
+
+// ── 2. GAME STATE ────────────────────────────────────────────
+let state = 'idle'; // idle | playing | dead
+let score = 0;
+let insureCount = 0;
+let startTime = 0;
+let lastTimestamp = 0;
+let deltaTime = 0;
+let level = 1;
+let spawnTimer = 0;
+let entities = [];
+let particles = [];
+let deathReason = '';
+
+// Base difficulty — bumped up for faster feel
+const BASE_SPEED      = 80;   // px/s at scale 1
+const BASE_INTERVAL   = 1400; // ms between spawns
+const SHIELD_DURATION = 3000; // ms
+
+// ── 3. STATIC ROAD LAYOUT ────────────────────────────────────
+// Road geometry — computed once and reused every frame
+let road = {};
+
+function buildRoadLayout() {
+  const rl = W * 0.05;   // road left edge
+  const rr = W * 0.95;   // road right edge
+  const rw = rr - rl;
+
+  // 4 lanes of equal width
+  const lw = rw / 4;
+
+  // Lane centre X positions
+  // Left pair:  lane 0 (top→bot), lane 1 (top→bot)
+  // Right pair: lane 2 (bot→top), lane 3 (bot→top)
+  const laneCX = [
+    rl + lw * 0.5,
+    rl + lw * 1.5,
+    rl + lw * 2.5,
+    rl + lw * 3.5,
+  ];
+
+  // Two pedestrian crossings at 35 % and 65 % of height
+  const cross1Y = H * 0.35;
+  const cross2Y = H * 0.65;
+  const crossH  = 70 * scale; // height of the crossing band (wider for pedestrians)
+
+  road = { rl, rr, rw, lw, laneCX, cross1Y, cross2Y, crossH };
+}
+
+buildRoadLayout();
+
+function drawRoad() {
+  const { rl, rr, rw, lw, laneCX, cross1Y, cross2Y, crossH } = road;
+
+  // ── Background (asphalt) ──
+  ctx.fillStyle = '#16181f';
+  ctx.fillRect(0, 0, W, H);
+
+  // Sidewalk strips (left & right of road)
+  ctx.fillStyle = '#2a2d35';
+  ctx.fillRect(0,  0, rl, H);
+  ctx.fillRect(rr, 0, W - rr, H);
+
+  // Road surface
+  const roadGrad = ctx.createLinearGradient(rl, 0, rr, 0);
+  roadGrad.addColorStop(0,   '#1c1e28');
+  roadGrad.addColorStop(0.5, '#23263a');
+  roadGrad.addColorStop(1,   '#1c1e28');
+  ctx.fillStyle = roadGrad;
+  ctx.fillRect(rl, 0, rw, H);
+
+  // ── Centre divider (between lane 1 and lane 2) ──
+  const divX = rl + lw * 2;
+  ctx.strokeStyle = '#f5c842';
+  ctx.lineWidth   = 3 * scale;
+  ctx.setLineDash([18 * scale, 12 * scale]);
+  ctx.beginPath();
+  ctx.moveTo(divX, 0); ctx.lineTo(divX, H);
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  // ── Lane dividers (dashed white, static) ──
+  ctx.strokeStyle = 'rgba(255,255,255,0.28)';
+  ctx.lineWidth   = 2 * scale;
+  ctx.setLineDash([20 * scale, 16 * scale]);
+  // Between lane 0 and 1
+  const d01 = rl + lw;
+  ctx.beginPath(); ctx.moveTo(d01, 0); ctx.lineTo(d01, H); ctx.stroke();
+  // Between lane 2 and 3
+  const d23 = rl + lw * 3;
+  ctx.beginPath(); ctx.moveTo(d23, 0); ctx.lineTo(d23, H); ctx.stroke();
+  ctx.setLineDash([]);
+
+  // ── Road edges ──
+  ctx.strokeStyle = 'rgba(255,255,255,0.14)';
+  ctx.lineWidth   = 2 * scale;
+  ctx.beginPath(); ctx.moveTo(rl, 0); ctx.lineTo(rl, H); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(rr, 0); ctx.lineTo(rr, H); ctx.stroke();
+
+  // ── Direction arrows (subtle) ──
+  drawArrows(laneCX[0], 1,  'rgba(255,255,255,0.07)'); // down
+  drawArrows(laneCX[1], 1,  'rgba(255,255,255,0.07)'); // down
+  drawArrows(laneCX[2], -1, 'rgba(255,255,255,0.07)'); // up
+  drawArrows(laneCX[3], -1, 'rgba(255,255,255,0.07)'); // up
+
+  // ── Pedestrian crossings ──
+  drawCrossing(cross1Y, crossH);
+  drawCrossing(cross2Y, crossH);
+
+  // ── Crossing labels ──
+  ctx.fillStyle = 'rgba(255,255,255,0.22)';
+  ctx.font = `bold ${9 * scale}px 'Exo 2', sans-serif`;
+  ctx.textAlign = 'center';
+  ctx.fillText('PEDESTRIAN CROSSING', W / 2, cross1Y - crossH / 2 - 4 * scale);
+  ctx.fillText('PEDESTRIAN CROSSING', W / 2, cross2Y - crossH / 2 - 4 * scale);
+}
+
+function drawArrows(cx, dir, color) {
+  // dir: 1 = down, -1 = up
+  const spacing = H / 5;
+  const aw = 10 * scale; // arrow width half
+  const ah = 14 * scale; // arrow height
+  ctx.fillStyle = color;
+  for (let i = 1; i < 5; i++) {
+    const ay = i * spacing;
+    ctx.beginPath();
+    if (dir === 1) {
+      ctx.moveTo(cx,      ay - ah / 2);
+      ctx.lineTo(cx + aw, ay - ah / 2 - ah * 0.6);
+      ctx.lineTo(cx - aw, ay - ah / 2 - ah * 0.6);
+    } else {
+      ctx.moveTo(cx,      ay + ah / 2);
+      ctx.lineTo(cx + aw, ay + ah / 2 + ah * 0.6);
+      ctx.lineTo(cx - aw, ay + ah / 2 + ah * 0.6);
+    }
+    ctx.closePath();
+    ctx.fill();
+  }
+}
+
+function drawCrossing(cy, ch) {
+  const { rl, rr } = road;
+  const stripeW = 14 * scale;
+  const gap     = 10 * scale;
+
+  // Background band (slightly lighter)
+  ctx.fillStyle = 'rgba(255,255,255,0.05)';
+  ctx.fillRect(rl, cy - ch / 2, rr - rl, ch);
+
+  // Zebra stripes
+  ctx.fillStyle = 'rgba(255,255,255,0.55)';
+  let sx = rl + gap;
+  while (sx + stripeW < rr) {
+    ctx.fillRect(sx, cy - ch / 2, stripeW, ch);
+    sx += stripeW + gap;
+  }
+
+  // Top & bottom border lines
+  ctx.strokeStyle = 'rgba(255,255,255,0.3)';
+  ctx.lineWidth   = 1.5 * scale;
+  ctx.beginPath();
+  ctx.moveTo(rl, cy - ch / 2); ctx.lineTo(rr, cy - ch / 2); ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(rl, cy + ch / 2); ctx.lineTo(rr, cy + ch / 2); ctx.stroke();
+}
+
+// ── 4. ENTITY CLASSES ────────────────────────────────────────
+
+class Entity {
+  constructor(x, y, vx, vy, type) {
+    this.x = x; this.y = y;
+    this.vx = vx; this.vy = vy;
+    this.type = type;        // 'car' | 'person' | 'pet'
+    this.shielded   = false;
+    this.shieldTime = 0;     // ms remaining
+    this.dead       = false;
+    this.id         = Math.random();
+    this.colorVariant = Math.floor(Math.random() * 3);
+  }
+
+  // Bounding box for AABB collision
+  get bounds() {
+    return { x: this.x - this.hw, y: this.y - this.hh, w: this.hw * 2, h: this.hh * 2 };
+  }
+
+  update(dt) {
+    this.x += this.vx * dt / 1000;
+    this.y += this.vy * dt / 1000;
+
+    // Swerve animation: smoothly move to adjacent lane and back
+    if (this.isSwerving) {
+      this.swerveProgress += this.swerveSpeed * (dt / 1000);
+      if (this.swerveProgress >= 1) {
+        this.swerveProgress = 0;
+        this.swervePhase    = this.swervePhase === 0 ? 1 : 0;
+        if (this.swervePhase === 0) this.isSwerving = false; // done both legs
+      }
+      const from = this.swervePhase === 0 ? this.swerveOrigin : this.swerveTarget;
+      const to   = this.swervePhase === 0 ? this.swerveTarget : this.swerveOrigin;
+      const t    = smoothstep(this.swerveProgress);
+      this.x     = from + (to - from) * t;
+    }
+
+    if (this.shielded) {
+      this.shieldTime -= dt;
+      if (this.shieldTime <= 0) {
+        this.shielded   = false;
+        this.shieldTime = 0;
+      }
+    }
+  }
+
+  isOffScreen() {
+    // Only remove after the entity has entered the screen AND fully exited the other side.
+    // This prevents newly spawned entities (starting just off-screen) from being deleted immediately.
+    if (!this.hasEnteredScreen) {
+      // Mark as entered once any part of the entity overlaps the canvas
+      if (this.x + (this.hw||0) > 0 && this.x - (this.hw||0) < W &&
+          this.y + (this.hh||0) > 0 && this.y - (this.hh||0) < H) {
+        this.hasEnteredScreen = true;
+      }
+      return false; // never remove before it has entered
+    }
+    // After entering, remove once fully outside
+    const hw = this.hw || 0;
+    const hh = this.hh || 0;
+    return (
+      this.x + hw < 0 ||
+      this.x - hw > W ||
+      this.y + hh < 0 ||
+      this.y - hh > H
+    );
+  }
+
+  insure() {
+    this.shielded   = true;
+    this.shieldTime = SHIELD_DURATION;
+  }
+
+  // ── DRAW HELPERS (replace Canvas calls with sprite draws here) ──
+
+  drawShield() {
+    if (!this.shielded) return;
+    // Visual shield timer (fades as it expires)
+    const alpha = Math.min(1, this.shieldTime / 1000) * 0.9;
+    const pulse = 1 + 0.06 * Math.sin(Date.now() * 0.008);
+    const r     = (Math.max(this.hw, this.hh) + 8 * scale) * pulse;
+
+    // Outer glow ring
+    ctx.save();
+    ctx.globalAlpha = alpha * 0.5;
+    const grad = ctx.createRadialGradient(this.x, this.y, r * 0.6, this.x, this.y, r * 1.2);
+    grad.addColorStop(0, 'rgba(0,245,255,0)');
+    grad.addColorStop(0.7, 'rgba(0,245,255,0.25)');
+    grad.addColorStop(1, 'rgba(0,245,255,0)');
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.arc(this.x, this.y, r * 1.2, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Solid ring
+    ctx.globalAlpha = alpha;
+    ctx.strokeStyle = '#00f5ff';
+    ctx.lineWidth   = 2.5 * scale;
+    ctx.shadowColor = '#00f5ff';
+    ctx.shadowBlur  = 12;
+    ctx.beginPath();
+    ctx.arc(this.x, this.y, r, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.restore();
+
+    // Shield timer arc
+    const progress = this.shieldTime / SHIELD_DURATION;
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    ctx.strokeStyle = '#00f5ff';
+    ctx.lineWidth   = 3 * scale;
+    ctx.shadowColor = '#00f5ff';
+    ctx.shadowBlur  = 8;
+    ctx.beginPath();
+    ctx.arc(this.x, this.y, r + 6 * scale, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * progress);
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  // Called after hit: flash red
+  drawHitEffect() {
+    ctx.save();
+    ctx.globalAlpha = 0.4;
+    ctx.fillStyle   = '#ff3b5c';
+    ctx.beginPath();
+    ctx.arc(this.x, this.y, Math.max(this.hw, this.hh) * 1.5, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
+}
+
+// ── CAR ──────────────────────────────────────────────────────
+class Car extends Entity {
+  constructor(x, y, vx, vy) {
+    super(x, y, vx, vy, 'car');
+    this.hw = 18 * scale;  // half-width
+    this.hh = 30 * scale;  // half-height
+    // 0=red, 1=blue, 2=yellow
+    this.colors = ['#e84040', '#4a90d9', '#f5c842'];
+  }
+
+  // ── ASSET HOOK: Replace fillRect calls below with drawImage(sprite, ...) ──
+  draw() {
+    const color = this.colors[this.colorVariant];
+    const w = this.hw * 2, h = this.hh * 2;
+    const x = this.x - this.hw, y = this.y - this.hh;
+
+    ctx.save();
+
+    // Body
+    ctx.fillStyle = color;
+    ctx.shadowColor = color;
+    ctx.shadowBlur  = 8;
+    roundRect(ctx, x, y, w, h, 6 * scale);
+    ctx.fill();
+
+    // Windshield
+    ctx.fillStyle = 'rgba(255,255,255,0.35)';
+    ctx.shadowBlur = 0;
+    const ww = w * 0.65, wh = h * 0.22;
+    roundRect(ctx, x + (w - ww) / 2, y + h * 0.15, ww, wh, 3 * scale);
+    ctx.fill();
+
+    // Rear window
+    roundRect(ctx, x + (w - ww) / 2, y + h * 0.63, ww, wh, 3 * scale);
+    ctx.fill();
+
+    // Headlights
+    ctx.fillStyle = '#fff8c0';
+    ctx.shadowColor = '#fff000';
+    ctx.shadowBlur  = 6;
+    ctx.beginPath();
+    ctx.arc(x + w * 0.25, y + h * 0.1, 3 * scale, 0, Math.PI * 2);
+    ctx.arc(x + w * 0.75, y + h * 0.1, 3 * scale, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Taillights
+    ctx.fillStyle = '#ff2222';
+    ctx.shadowColor = '#ff2222';
+    ctx.beginPath();
+    ctx.arc(x + w * 0.25, y + h * 0.9, 3 * scale, 0, Math.PI * 2);
+    ctx.arc(x + w * 0.75, y + h * 0.9, 3 * scale, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Swerve warning indicator
+    if (this.isSwerving) {
+      ctx.save();
+      ctx.fillStyle    = '#ffdd00';
+      ctx.shadowColor  = '#ffdd00';
+      ctx.shadowBlur   = 10;
+      ctx.font         = `bold ${13 * scale}px 'Exo 2', sans-serif`;
+      ctx.textAlign    = 'center';
+      ctx.fillText('⚠', this.x, this.y - this.hh - 8 * scale);
+      ctx.restore();
+    }
+
+    ctx.restore();
+
+    this.drawShield();
+  }
+}
+
+// ── PERSON ───────────────────────────────────────────────────
+class Person extends Entity {
+  constructor(x, y, vx, vy) {
+    super(x, y, vx, vy, 'person');
+    this.hw = 12 * scale;
+    this.hh = 18 * scale;
+    // Walking cycle frame
+    this.walkPhase = Math.random() * Math.PI * 2;
+    this.colors = ['#4a90d9', '#7b68ee', '#3cb371'];
+  }
+
+  // ── ASSET HOOK: Replace arc/fillRect calls below with drawImage(sprite, ...) ──
+  draw() {
+    const color = this.colors[this.colorVariant];
+    this.walkPhase += 0.18;
+    const swing = Math.sin(this.walkPhase) * 4 * scale;
+
+    ctx.save();
+    ctx.shadowColor = color;
+    ctx.shadowBlur  = 10;
+
+    // Body
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.ellipse(this.x, this.y + 5 * scale, this.hw * 0.6, this.hh * 0.55, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Head
+    ctx.fillStyle = '#f5cba7';
+    ctx.shadowBlur = 5;
+    ctx.beginPath();
+    ctx.arc(this.x, this.y - this.hh * 0.55, this.hw * 0.6, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Legs (animated)
+    ctx.strokeStyle = color;
+    ctx.lineWidth   = 3 * scale;
+    ctx.lineCap     = 'round';
+    ctx.beginPath();
+    ctx.moveTo(this.x, this.y + this.hh * 0.15);
+    ctx.lineTo(this.x - 5 * scale + swing, this.y + this.hh);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(this.x, this.y + this.hh * 0.15);
+    ctx.lineTo(this.x + 5 * scale - swing, this.y + this.hh);
+    ctx.stroke();
+
+    ctx.restore();
+    this.drawShield();
+  }
+}
+
+// ── PET ──────────────────────────────────────────────────────
+class Pet extends Entity {
+  constructor(x, y, vx, vy) {
+    super(x, y, vx, vy, 'pet');
+    this.hw = 9 * scale;
+    this.hh = 9 * scale;
+    this.wiggle = Math.random() * Math.PI * 2;
+    this.colors = ['#ff8c42', '#ff6b9d', '#a0e050'];
+  }
+
+  // ── ASSET HOOK: Replace fillRect/arc calls below with drawImage(sprite, ...) ──
+  draw() {
+    const color = this.colors[this.colorVariant];
+    this.wiggle += 0.22;
+    const bounce = Math.sin(this.wiggle) * 3 * scale;
+
+    ctx.save();
+    ctx.shadowColor = color;
+    ctx.shadowBlur  = 8;
+    ctx.fillStyle   = color;
+
+    // Body (small square)
+    roundRect(ctx, this.x - this.hw, this.y - this.hh + bounce, this.hw * 2, this.hh * 2, 4 * scale);
+    ctx.fill();
+
+    // Ears
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.moveTo(this.x - this.hw + 2 * scale, this.y - this.hh + bounce - 4 * scale);
+    ctx.lineTo(this.x - this.hw + 6 * scale, this.y - this.hh + bounce);
+    ctx.lineTo(this.x - this.hw,              this.y - this.hh + bounce);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(this.x + this.hw - 2 * scale, this.y - this.hh + bounce - 4 * scale);
+    ctx.lineTo(this.x + this.hw - 6 * scale, this.y - this.hh + bounce);
+    ctx.lineTo(this.x + this.hw,              this.y - this.hh + bounce);
+    ctx.fill();
+
+    // Eyes
+    ctx.fillStyle = '#fff';
+    ctx.shadowBlur = 0;
+    ctx.beginPath();
+    ctx.arc(this.x - 3 * scale, this.y - 2 * scale + bounce, 2 * scale, 0, Math.PI * 2);
+    ctx.arc(this.x + 3 * scale, this.y - 2 * scale + bounce, 2 * scale, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.restore();
+    this.drawShield();
+  }
+}
+
+// ── 5. FLOATING TEXT PARTICLES ────────────────────────────────
+class FloatText {
+  constructor(x, y, text, color = '#00f5ff') {
+    this.x = x; this.y = y;
+    this.text  = text;
+    this.color = color;
+    this.alpha = 1;
+    this.vy    = -60 * scale; // px/s upward
+    this.life  = 1.2;  // seconds
+    this.age   = 0;
+  }
+
+  update(dt) {
+    this.age += dt / 1000;
+    this.y   += this.vy * (dt / 1000);
+    this.alpha = Math.max(0, 1 - this.age / this.life);
+    return this.alpha > 0;
+  }
+
+  draw() {
+    ctx.save();
+    ctx.globalAlpha = this.alpha;
+    ctx.fillStyle   = this.color;
+    ctx.shadowColor = this.color;
+    ctx.shadowBlur  = 10;
+    ctx.font        = `bold ${14 * scale}px 'Orbitron', sans-serif`;
+    ctx.textAlign   = 'center';
+    ctx.fillText(this.text, this.x, this.y);
+    ctx.restore();
+  }
+}
+
+// ── 6. COLLISION DETECTION (AABB) ────────────────────────────
+function aabbOverlap(a, b) {
+  const ba = a.bounds, bb = b.bounds;
+  return (
+    ba.x < bb.x + bb.w &&
+    ba.x + ba.w > bb.x &&
+    ba.y < bb.y + bb.h &&
+    ba.y + ba.h > bb.y
+  );
+}
+
+// Track pairs currently overlapping to award +100 only once per pass-through
+const activePassthroughs = new Set();
+
+function checkCollisions() {
+  const currentOverlaps = new Set();
+
+  for (let i = 0; i < entities.length; i++) {
+    for (let j = i + 1; j < entities.length; j++) {
+      const a = entities[i], b = entities[j];
+      if (a.dead || b.dead) continue;
+      if (!aabbOverlap(a, b)) continue;
+
+      const pairKey = `${Math.min(i,j)}-${Math.max(i,j)}-${a.id.toFixed(6)}-${b.id.toFixed(6)}`;
+
+      // Collision detected!
+      if (a.shielded || b.shielded) {
+        // At least one shielded — pass through silently, shield stays intact
+        // Award +100 only the first frame this pair overlaps
+        if (!activePassthroughs.has(pairKey)) {
+          activePassthroughs.add(pairKey);
+          currentOverlaps.add(pairKey);
+          score += 100;
+          insureCount++; // count as a successful insure event for stats
+
+          // Show +100 above whichever entity is shielded
+          const target = a.shielded ? a : b;
+          particles.push(new FloatText(target.x, target.y - target.hh - 10 * scale, '✦ PASS THROUGH +100', '#00f5ff'));
+        } else {
+          currentOverlaps.add(pairKey); // still overlapping, keep in set
+        }
+      } else {
+        // People and pets pass through each other freely — no collision
+        const pedestrians = new Set(['person', 'pet']);
+        if (pedestrians.has(a.type) && pedestrians.has(b.type)) continue;
+
+        // Car vs car, car vs person, car vs pet — game over
+        a.dead = true;
+        b.dead = true;
+        const names = { car: 'Car', person: 'Person', pet: 'Pet' };
+        deathReason = `💥 ${names[a.type]} crashed into ${names[b.type]}!`;
+        triggerGameOver();
+        return;
+      }
+    }
+  }
+
+  // Clean up pairs that are no longer overlapping so they can score again if they re-collide
+  for (const key of activePassthroughs) {
+    if (!currentOverlaps.has(key)) activePassthroughs.delete(key);
+  }
+}
+
+// ── 7. SPAWNING ───────────────────────────────────────────────
+// Cars: 4 fixed lanes — left 2 go top→bottom, right 2 go bottom→top
+// People & Pets: confined to the two pedestrian crossing bands
+
+// Track which lanes currently have a car near the spawn point to prevent overlaps
+function laneHasCar(laneIdx) {
+  const { laneCX } = road;
+  const cx      = laneCX[laneIdx];
+  const goDown  = laneIdx < 2;
+  const spawnY  = goDown ? 0 : H;
+  const buffer  = 120 * scale; // min gap from spawn edge
+  return entities.some(e => {
+    if (e.type !== 'car') return false;
+    return Math.abs(e.x - cx) < 10 * scale &&
+           Math.abs(e.y - spawnY) < buffer;
+  });
+}
+
+function spawnCar(forceLane) {
+  const speedMult = 1 + (level - 1) * 0.02; // +2% speed per level
+  const baseSpd   = BASE_SPEED * speedMult * scale;
+  const { laneCX } = road;
+
+  const laneIdx = forceLane !== undefined ? forceLane : Math.floor(Math.random() * 4);
+  if (laneHasCar(laneIdx)) return null; // skip — avoid overlap
+
+  const cx     = laneCX[laneIdx];
+  const goDown = laneIdx < 2;
+  const spd    = baseSpd * (0.85 + Math.random() * 0.35);
+  const y      = goDown ? -(55 * scale) : H + 55 * scale;
+  const vy     = goDown ? spd : -spd;
+
+  const car = new Car(cx, y, 0, vy);
+
+  // Swerving car: spawns rarely (~8% chance), picks an adjacent lane to swerve into
+  const canSwerve = Math.random() < 0.08;
+  if (canSwerve) {
+    // Swerve target: the other lane in the same direction group
+    const swerveTarget = laneIdx < 2
+      ? laneCX[laneIdx === 0 ? 1 : 0]   // lanes 0↔1
+      : laneCX[laneIdx === 2 ? 3 : 2];  // lanes 2↔3
+    car.isSwerving    = true;
+    car.swerveTarget  = swerveTarget;
+    car.swerveOrigin  = cx;
+    car.swervePhase   = 0;    // 0=going to target, 1=returning
+    car.swerveProgress= 0;    // 0..1
+    car.swerveSpeed   = 0.55 + Math.random() * 0.45; // units/sec (progress rate)
+    car.colorVariant  = 2;    // yellow = swerving warning colour
+  }
+
+  return car;
+}
+
+function spawnPedestrian(TypeClass) {
+  const speedMult = 1 + (level - 1) * 0.02; // +2% speed per level
+  const baseSpd   = BASE_SPEED * speedMult * scale;
+  const { cross1Y, cross2Y, crossH } = road;
+
+  // Pick one of the two crossings at random
+  const crossY   = Math.random() < 0.5 ? cross1Y : cross2Y;
+  // Randomise vertical position within the crossing band
+  const y        = crossY + (Math.random() - 0.5) * crossH * 0.6;
+  const fromLeft = Math.random() < 0.5;
+  const x        = fromLeft ? -(40 * scale) : W + 40 * scale;
+  const spd      = baseSpd * (TypeClass === Pet ? 0.9 : 0.55) * (0.8 + Math.random() * 0.5);
+  const vx       = fromLeft ? spd : -spd;
+
+  return new TypeClass(x, y, vx, 0);
+}
+
+let carSpawnTimer  = 0;
+let pedSpawnTimer  = 0;
+const CAR_INTERVAL = () => Math.max(700,  BASE_INTERVAL / (1 + (level - 1) * 0.02)); // gradually speeds up 2%/level
+const PED_INTERVAL = () => Math.max(700,  BASE_INTERVAL / (1 + (level - 1) * 0.02)); // gradually speeds up 2%/level
+
+function spawnEntities(dt) {
+  carSpawnTimer += dt;
+  pedSpawnTimer += dt;
+
+  // Spawn cars — one per interval, picking a random available lane
+  // Also always try to spawn one car going down (lane 0 or 1) AND one going up (lane 2 or 3)
+  if (carSpawnTimer >= CAR_INTERVAL()) {
+    carSpawnTimer = 0;
+
+    // Try to get one downward car (left lanes 0,1) and one upward car (right lanes 2,3)
+    const downLane = Math.random() < 0.5 ? 0 : 1;
+    const upLane   = Math.random() < 0.5 ? 2 : 3;
+    const carDown  = spawnCar(downLane);
+    const carUp    = spawnCar(upLane);
+    if (carDown) entities.push(carDown);
+    if (carUp)   entities.push(carUp);
+
+    // Extra lanes at higher levels
+    if (level >= 3 && Math.random() < 0.45) {
+      const extra = spawnCar(Math.random() < 0.5 ? (downLane === 0 ? 1 : 0) : (upLane === 2 ? 3 : 2));
+      if (extra) entities.push(extra);
+    }
+  }
+
+  // Spawn pedestrians & pets
+  if (pedSpawnTimer >= PED_INTERVAL()) {
+    pedSpawnTimer = 0;
+    const roll = Math.random();
+    if (roll < 0.55) {
+      entities.push(spawnPedestrian(Person));
+    } else {
+      entities.push(spawnPedestrian(Pet));
+    }
+    if (level >= 3 && Math.random() < 0.5) {
+      entities.push(spawnPedestrian(Math.random() < 0.5 ? Person : Pet));
+    }
+  }
+}
+
+// ── 8. GAME LOOP ──────────────────────────────────────────────
+let rafId = null;
+
+function gameLoop(timestamp) {
+  if (state !== 'playing') return;
+
+  deltaTime    = Math.min(timestamp - lastTimestamp, 100); // cap at 100ms
+  lastTimestamp = timestamp;
+
+  // Update difficulty level
+  const elapsed = timestamp - startTime;
+  level = 1 + Math.floor(elapsed / 20000); // level up every 20s
+
+  // Spawn cars and pedestrians on separate timers
+  spawnEntities(deltaTime);
+
+  // Update entities
+  entities.forEach(e => e.update(deltaTime));
+  entities = entities.filter(e => !e.dead && !e.isOffScreen());
+
+  // Update particles
+  particles = particles.filter(p => p.update(deltaTime));
+
+  // Check collisions
+  checkCollisions();
+
+  // Calculate score
+  const timeSec  = Math.floor(elapsed / 1000);
+  const timeScore = Math.floor(elapsed / 100); // 1 pt per 100ms
+  score = timeScore + insureCount * 10;
+
+  // Update HUD
+  document.getElementById('hudScore').textContent = score;
+  document.getElementById('hudTime').textContent  = formatTime(elapsed);
+  document.getElementById('hudLevel').textContent = level;
+
+  // Draw
+  drawRoad();
+  entities.forEach(e => e.draw());
+  particles.forEach(p => p.draw());
+
+  rafId = requestAnimationFrame(gameLoop);
+}
+
+function formatTime(ms) {
+  const s = Math.floor(ms / 1000);
+  const m = Math.floor(s / 60);
+  return `${m}:${String(s % 60).padStart(2, '0')}`;
+}
+
+// ── 9. INPUT HANDLING ─────────────────────────────────────────
+function handleInput(clientX, clientY) {
+  if (state !== 'playing') return;
+
+  const rect = canvas.getBoundingClientRect();
+  const x    = (clientX - rect.left) * (canvas.width  / rect.width);
+  const y    = (clientY - rect.top)  * (canvas.height / rect.height);
+
+  // Find tapped entity (front-to-back)
+  for (let i = entities.length - 1; i >= 0; i--) {
+    const e  = entities[i];
+    const dx = Math.abs(x - e.x);
+    const dy = Math.abs(y - e.y);
+
+    // Generous hit target (2x visual size for mobile)
+    const hitW = e.hw * 2.2;
+    const hitH = e.hh * 2.2;
+
+    if (dx < hitW && dy < hitH) {
+      if (!e.shielded) {
+        e.insure();
+        insureCount++;
+        score += 10;
+        particles.push(new FloatText(e.x, e.y - e.hh - 10 * scale, 'INSURED! +10', '#00f5ff'));
+      } else {
+        // Refresh shield
+        e.shieldTime = SHIELD_DURATION;
+        particles.push(new FloatText(e.x, e.y - e.hh - 10 * scale, '↻ REFRESHED', '#a0e0ff'));
+      }
+      break;
+    }
+  }
+}
+
+canvas.addEventListener('mousedown', e => {
+  e.preventDefault();
+  handleInput(e.clientX, e.clientY);
+});
+
+canvas.addEventListener('touchstart', e => {
+  e.preventDefault();
+  const t = e.changedTouches[0];
+  handleInput(t.clientX, t.clientY);
+}, { passive: false });
+
+// ── 10. GAME STATE MANAGEMENT ─────────────────────────────────
+function startGame() {
+  state         = 'playing';
+  score         = 0;
+  insureCount   = 0;
+  level         = 1;
+  carSpawnTimer = 0;
+  pedSpawnTimer = 0;
+  entities      = [];
+  particles     = [];
+  activePassthroughs.clear();
+  buildRoadLayout();
+  deathReason = '';
+  startTime   = performance.now();
+  lastTimestamp = startTime;
+
+  document.getElementById('startOverlay').classList.add('hidden');
+  document.getElementById('gameOverOverlay').classList.add('hidden');
+
+  if (rafId) cancelAnimationFrame(rafId);
+  rafId = requestAnimationFrame(ts => {
+    lastTimestamp = ts;
+    rafId = requestAnimationFrame(gameLoop);
+  });
+}
+
+function triggerGameOver() {
+  state = 'dead';
+  cancelAnimationFrame(rafId);
+
+  const elapsed = performance.now() - startTime;
+
+  document.getElementById('finalScore').textContent  = score;
+  document.getElementById('finalTime').textContent   = formatTime(elapsed);
+  document.getElementById('finalInsures').textContent = insureCount;
+  document.getElementById('finalLevel').textContent  = level;
+  document.getElementById('deathReason').textContent = deathReason;
+
+  // Draw final frame
+  drawRoad();
+  entities.forEach(e => {
+    e.drawHitEffect && e.type !== 'dead' && e.drawHitEffect();
+    e.draw();
+  });
+
+  setTimeout(() => {
+    document.getElementById('gameOverOverlay').classList.remove('hidden');
+  }, 400);
+}
+
+document.getElementById('startBtn').addEventListener('click', startGame);
+document.getElementById('restartBtn').addEventListener('click', startGame);
+
+// ── Menu button → back to start screen ──
+document.getElementById('menuBtn').addEventListener('click', () => {
+  document.getElementById('gameOverOverlay').classList.add('hidden');
+  document.getElementById('startOverlay').classList.remove('hidden');
+  state = 'idle';
+  entities = [];
+  particles = [];
+});
+
+// ── Share helpers ──
+function buildShareText() {
+  const s = document.getElementById('finalScore').textContent;
+  const t = document.getElementById('finalTime').textContent;
+  const l = document.getElementById('finalLevel').textContent;
+  return `🛡 Shield Me — Score: ${s} | Survived: ${t} | Level: ${l} | Can you beat me?`;
+}
+
+document.getElementById('shareTwitter').addEventListener('click', () => {
+  const text = encodeURIComponent(buildShareText());
+  // ── ASSET HOOK: Replace '#' with your game URL when deployed ──
+  const url  = encodeURIComponent('#');
+  window.open(`https://twitter.com/intent/tweet?text=${text}&url=${url}`, '_blank');
+});
+
+document.getElementById('shareFacebook').addEventListener('click', () => {
+  // ── ASSET HOOK: Replace '#' with your game URL when deployed ──
+  const url = encodeURIComponent('#');
+  window.open(`https://www.facebook.com/sharer/sharer.php?u=${url}&quote=${encodeURIComponent(buildShareText())}`, '_blank');
+});
+
+document.getElementById('shareCopy').addEventListener('click', () => {
+  const text = buildShareText();
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(showCopyToast);
+  } else {
+    // Fallback for older mobile browsers
+    const ta = document.createElement('textarea');
+    ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+    document.body.appendChild(ta); ta.select();
+    try { document.execCommand('copy'); showCopyToast(); } catch(e) {}
+    document.body.removeChild(ta);
+  }
+});
+
+function showCopyToast() {
+  const toast = document.getElementById('copyToast');
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 2200);
+}
+
+// Draw idle road on load
+(function idleDraw() {
+  if (state !== 'idle') return;
+  drawRoad();
+  requestAnimationFrame(idleDraw);
+})();
+
+// ── UTILITY ───────────────────────────────────────────────────
+function smoothstep(t) {
+  t = Math.max(0, Math.min(1, t));
+  return t * t * (3 - 2 * t);
+}
+
+function roundRect(ctx, x, y, w, h, r) {
+  r = Math.min(r, w / 2, h / 2);
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.arcTo(x + w, y,     x + w, y + h, r);
+  ctx.arcTo(x + w, y + h, x,     y + h, r);
+  ctx.arcTo(x,     y + h, x,     y,     r);
+  ctx.arcTo(x,     y,     x + w, y,     r);
+  ctx.closePath();
+}
+</script>
+</body>
+</html>
