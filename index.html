@@ -1832,7 +1832,7 @@ document.getElementById('shareInvite').addEventListener('click', () => {
   const playerLevel = document.getElementById('finalLevel').textContent;
   // ── ASSET HOOK: Replace with your real game URL ──
   const gameUrl     = window.location.href.split('?')[0];
-  const message     = `🛡 Hey! I just scored ${playerScore} pts in Shield Me — survived ${playerTime} at Level ${playerLevel}. Think you can beat me? Play here: ${gameUrl}`;
+  const message     = `🛡 Hey! I just scored ${playerScore} pts in Shield Me — survived ${playerTime} at Level ${playerLevel}. Think you can beat me? Play here:`;
 
   // Try native share sheet first (mobile)
   if (navigator.share) {
