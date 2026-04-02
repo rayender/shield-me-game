@@ -1673,8 +1673,8 @@ document.getElementById('restartBtn').addEventListener('click', () => {
 
 // ── SUPABASE LEADERBOARD ──────────────────────────────────
 // !! Replace these two values with your own from supabase.com !!
-const SUPABASE_URL    = 'YOUR_SUPABASE_URL';       // e.g. https://xyzxyz.supabase.co
-const SUPABASE_ANON   = 'YOUR_SUPABASE_ANON_KEY';  // long string starting with eyJ…
+const SUPABASE_URL    = 'https://msluwlyqpoxbmtgwawge.supabase.co';       // e.g. https://xyzxyz.supabase.co
+const SUPABASE_ANON   = 'sb_publishable_EB1uZ5QEgPHEj6IMH9mz-Q_hRuer0Hu';  // long string starting with eyJ…
 
 let supabaseClient = null;
 try {
@@ -1816,13 +1816,13 @@ function buildShareText() {
 document.getElementById('shareTwitter').addEventListener('click', () => {
   const text = encodeURIComponent(buildShareText());
   // ── ASSET HOOK: Replace '#' with your game URL when deployed ──
-  const url  = encodeURIComponent('#');
+  const url  = encodeURIComponent('https://project-oknus.vercel.app/');
   window.open(`https://twitter.com/intent/tweet?text=${text}&url=${url}`, '_blank');
 });
 
 document.getElementById('shareFacebook').addEventListener('click', () => {
   // ── ASSET HOOK: Replace '#' with your game URL when deployed ──
-  const url = encodeURIComponent('#');
+  const url = encodeURIComponent('https://project-oknus.vercel.app/');
   window.open(`https://www.facebook.com/sharer/sharer.php?u=${url}&quote=${encodeURIComponent(buildShareText())}`, '_blank');
 });
 
